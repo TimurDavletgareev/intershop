@@ -4,10 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.intershop.entity.Cart;
+import ru.yandex.intershop.entity.CartPosition;
 import ru.yandex.intershop.repository.CartRepository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Service
 @Transactional
@@ -17,25 +18,44 @@ public class CartEntityService {
 
     private final CartRepository cartRepository;
 
-    public Cart findById(Long id) {
-        log.info("Find Cart by id: {}", id);
-        Optional<Cart> cart = cartRepository.findById(id);
+    public CartPosition findById(Long id) {
+        log.info("Find CartPosition by id: {}", id);
+        Optional<CartPosition> cart = cartRepository.findById(id);
         if (cart.isPresent()) {
-            log.info("Cart by id={} found successfully", id);
+            log.info("CartPosition by id={} found successfully", id);
             return cart.get();
         }
-        log.info("Cart by id={} not found", id);
+        log.info("CartPosition by id={} not found", id);
         return null;
     }
 
-    public Cart findByUserId(Long userId) {
-        log.info("Find Cart by userId: {}", userId);
-        Optional<Cart> cart = cartRepository.findByUserId(userId);
+    public CartPosition findByUserIdAndItemId(Long userId, Long itemId) {
+        log.info("Find CartPosition by userId={} and itemId={}", userId, itemId);
+        Optional<CartPosition> cart = cartRepository.findByUserIdAndItemId(userId, itemId);
         if (cart.isPresent()) {
-            log.info("Cart by userId={} found successfully", userId);
+            log.info("CartPosition by userId={} and itemId={} found successfully", userId, itemId);
             return cart.get();
+        } else {
+            log.info("CartPosition by userId={} and itemId={} not found", userId, itemId);
         }
-        log.info("Cart by userId={} not found", userId);
         return null;
+    }
+
+    public List<CartPosition> findByUserId(Long userId) {
+        log.info("Find CartPosition by userId: {}", userId);
+        List<CartPosition> userCartContent = cartRepository.findByUserId(userId);
+        if (userCartContent.isEmpty()) {
+            log.info("CartPosition by userId={} found successfully", userId);
+        } else {
+            log.info("CartPosition by userId={} not found", userId);
+        }
+        return userCartContent;
+    }
+
+    public CartPosition save(CartPosition cartPosition) {
+        log.info("Save CartPosition: {}", cartPosition);
+        CartPosition savedCartPosition = cartRepository.save(cartPosition);
+        log.info("CartPosition saved: {}", savedCartPosition);
+        return savedCartPosition;
     }
 }

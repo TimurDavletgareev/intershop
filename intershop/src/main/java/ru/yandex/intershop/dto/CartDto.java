@@ -8,6 +8,5 @@ import java.util.Map;
 @Data
 public class CartDto {
 
-    private Long userId;
-    private Map<Item, Integer> items;
+    private Map<ItemDto, Integer> userItems;
 }

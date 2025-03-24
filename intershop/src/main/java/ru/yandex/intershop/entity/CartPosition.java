@@ -7,11 +7,11 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "carts")
+@Table(name = "cart_positions")
 @Getter
 @Setter
 @ToString
-public class Cart {
+public class CartPosition {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +29,4 @@ public class Cart {
 
     @Column(name = "item_price", nullable = false)
     private Integer itemPrice;
-
-    @Column(name = "total_price", nullable = false)
-    private Integer totalPrice;
 }

@@ -10,6 +10,7 @@ import ru.yandex.intershop.entity.Item;
 import ru.yandex.intershop.repository.ItemRepository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Service
 @Transactional
@@ -35,6 +36,17 @@ public class ItemEntityService {
         }
         log.info("Item by id={} not found", id);
         return null;
+    }
+
+    public List<Item> findByIdIn(List<Long> ids) {
+        log.info("Find Items by ids");
+        List<Item> items = itemRepository.findByIdIn(ids);
+        if (!items.isEmpty()) {
+            log.info("Items by ids found successfully, ids list size={}", ids.size());
+        } else {
+            log.info("Item by ids not found, ids list size={}", ids.size());
+        }
+        return items;
     }
 
     public Page<Item> findByTitle(String title, Pageable pageable) {

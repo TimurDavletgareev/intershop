@@ -27,8 +27,8 @@ public class Item {
     @Column(name = "image_url")
     private String imageUrl;
 
-    @Column(name = "amount", nullable = false)
-    private Integer amount;
+    @Column(name = "amount_in_stock", nullable = false)
+    private Integer amountInStock;
 
     @Column(name = "price", nullable = false)
     private Integer price;
