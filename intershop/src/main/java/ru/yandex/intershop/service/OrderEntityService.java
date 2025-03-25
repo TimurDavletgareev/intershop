@@ -2,13 +2,12 @@ package ru.yandex.intershop.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.intershop.entity.Order;
 import ru.yandex.intershop.repository.OrderRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,20 +29,9 @@ public class OrderEntityService {
         return null;
     }
 
-    public Order findByOrderUid(String orderUid) {
-        log.info("Find order by orderUid: {}", orderUid);
-        Optional<Order> order = orderRepository.findByOrderUid(orderUid);
-        if (order.isPresent()) {
-            log.info("Order by orderUid={} found successfully", orderUid);
-            return order.get();
-        }
-        log.info("Order by orderUid={} not found", orderUid);
-        return null;
-    }
-
-    public Page<Order> findByUserId(Long userId, Pageable pageable) {
+    public List<Order> findByUserId(Long userId) {
         log.info("Find orders by userId: {}", userId);
-        Page<Order> orders = orderRepository.findByUserId(userId, pageable);
+        List<Order> orders = orderRepository.findByUserId(userId);
         if (!orders.isEmpty()) {
             log.info("Orders by userId={} found successfully", userId);
         } else {
@@ -52,11 +40,28 @@ public class OrderEntityService {
         return orders;
     }
 
+    public List<Order> findByOrderUid(String uid) {
+        log.info("Find order by uid: {}", uid);
+        List<Order> order = orderRepository.findByOrderUid(uid);
+        if (!order.isEmpty()) {
+            log.info("Order by uid={} found successfully", uid);
+        } else {
+            log.info("Order by uid={} not found", uid);
+        }
+        return order;
+    }
+
     public Order save(Order order) {
         log.info("Save order: {}", order);
         Order savedOrder = orderRepository.save(order);
         log.info("Order saved: {}", savedOrder);
         return savedOrder;
+    }
+
+    public void saveAll(List<Order> orders) {
+        log.info("Save {} orders", orders.size());
+        orderRepository.saveAll(orders);
+        log.info("Orders saved");
     }
 
     public void delete(Order order) {

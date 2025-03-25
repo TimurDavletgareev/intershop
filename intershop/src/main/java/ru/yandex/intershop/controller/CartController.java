@@ -6,27 +6,27 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.intershop.dto.CartDto;
 import ru.yandex.intershop.service.CartService;
-import ru.yandex.intershop.service.ItemService;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/cart/items")
 public class CartController {
 
-    private final ItemService itemService;
     private final CartService cartService;
 
     @GetMapping
-    public String getItem(Model model) {
+    public String getCart(Model model) {
         CartDto cartDto = cartService.find();
-        model.addAttribute("item", itemDto);
-        return "item";
+        model.addAttribute("items", cartDto.getItems());
+        model.addAttribute("total", cartDto.total());
+        model.addAttribute("empty", cartDto.empty());
+        return "cart";
     }
 
     @PostMapping("/{itemId}")
     public String changeCount(@PathVariable Long itemId,
                               @RequestParam String action) {
         cartService.changeItemQuantity(itemId, action);
-        return "redirect:/items/" + itemId;
+        return "redirect:/cart/items";
     }
 }

@@ -1,6 +1,6 @@
 drop table if exists users cascade;
 drop table if exists items cascade;
-drop table if exists carts cascade;
+drop table if exists cart_positions cascade;
 drop table if exists orders cascade;
 
 CREATE TABLE IF NOT EXISTS users (

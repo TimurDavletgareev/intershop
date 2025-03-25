@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.intershop.entity.CartPosition;
 import ru.yandex.intershop.repository.CartRepository;
 
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -42,20 +42,36 @@ public class CartEntityService {
     }
 
     public List<CartPosition> findByUserId(Long userId) {
-        log.info("Find CartPosition by userId: {}", userId);
+        log.info("Find CartPositions by userId: {}", userId);
         List<CartPosition> userCartContent = cartRepository.findByUserId(userId);
-        if (userCartContent.isEmpty()) {
-            log.info("CartPosition by userId={} found successfully", userId);
+        if (!userCartContent.isEmpty()) {
+            log.info("CartPositions by userId={} found successfully, list size={}", userId, userCartContent.size());
         } else {
-            log.info("CartPosition by userId={} not found", userId);
+            log.info("CartPositions by userId={} not found", userId);
         }
         return userCartContent;
     }
 
-    public CartPosition save(CartPosition cartPosition) {
+    public void save(CartPosition cartPosition) {
         log.info("Save CartPosition: {}", cartPosition);
         CartPosition savedCartPosition = cartRepository.save(cartPosition);
         log.info("CartPosition saved: {}", savedCartPosition);
-        return savedCartPosition;
+    }
+
+    public void delete(Long cartPositionId) {
+        log.info("Deleting CartPosition by id: {}", cartPositionId);
+        Optional<CartPosition> cartPosition = cartRepository.findById(cartPositionId);
+        if (cartPosition.isPresent()) {
+            cartRepository.delete(cartPosition.get());
+            log.info("CartPosition deleted: {}", cartPosition.get());
+        } else {
+            log.info("CartPosition by id={} NOT deleted: unable to find cartPositionId", cartPositionId);
+        }
+    }
+
+    public void deleteByUserId(Long userId) {
+        log.info("Deleting CartPositions by userId: {}", userId);
+        cartRepository.deleteByUserId(userId);
+        log.info("All CartPositions deleted by userId={}", userId);
     }
 }

@@ -21,18 +21,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ItemService {
 
-    private final UserService userService;
     private final ItemEntityService itemEntityService;
     private final CartService cartService;
     private final ItemMapper itemMapper;
     private static final int ROW_SIZE = 3;
 
-    public ItemDto findById(Long id) {
-        log.info("Find ItemDto by id: {}", id);
-        ItemDto itemDto = itemMapper.mapFrom(itemEntityService.findById(id));
+    public ItemDto findById(Long itemId) {
+        log.info("Find ItemDto by itemId: {}", itemId);
+        ItemDto itemDto = itemMapper.map(itemEntityService.findById(itemId));
         CartDto cartDto = cartService.find();
-        Map<ItemDto, Integer> userItems = cartDto.getUserItems();
-        itemDto.setCount(userItems.getOrDefault(itemDto, 0));
+        Map<Long, Integer> userItems = cartDto.getQuantityByItemId();
+        itemDto.setCount(userItems.getOrDefault(itemId, 0));
         return itemDto;
     }
 
@@ -53,12 +52,12 @@ public class ItemService {
         } else {
             pagedItems = itemEntityService.findByTitle(searchString, pageable);
         }
-        Page<ItemDto> pagedItemDtos = pagedItems.map(itemMapper::mapFrom);
+        Page<ItemDto> pagedItemDtos = pagedItems.map(itemMapper::map);
 
         CartDto cartDto = cartService.find();
-        Map<ItemDto, Integer> userItems = cartDto.getUserItems();
+        Map<Long, Integer> quantityByItemId = cartDto.getQuantityByItemId();
         for (ItemDto itemDto : pagedItemDtos) {
-            itemDto.setCount(userItems.getOrDefault(itemDto, 0));
+            itemDto.setCount(quantityByItemId.getOrDefault(itemDto.getId(), 0));
         }
         log.info("Found {} pagedItems by searchString={}, sortString={}, pageNumber={}, pageSize={}",
                 pagedItemDtos.getTotalElements(), searchString, sortString, pageNumber, pageSize);

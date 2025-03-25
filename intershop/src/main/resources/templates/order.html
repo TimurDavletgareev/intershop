@@ -9,7 +9,7 @@
 <a href="/orders" style="float:right;">
     <b>ЗАКАЗЫ &cudarrr;</b>
 </a>
-<a href="/cartPosition/items" style="float:right;">
+<a href="/cart/items" style="float:right;">
     <b>КОРЗИНА &cudarrr;</b>
 </a>
 <a href="/main/items" style="float:right;">
@@ -19,16 +19,16 @@
 <table style="width:70%;margin-left:auto;margin-right:auto;">
     <tr>
         <td>
-            <h2 th:text="${'Заказ №'+order.id()}"></h2>
+            <h2 th:text="${'Заказ №'+order.getOrderUid()}"></h2>
         </td>
     </tr>
-    <tr th:each="item : ${order.items()}">
+    <tr th:each="item : ${order.getItems()}">
         <td>
             <table>
                 <tr>
                     <td>
                         <a th:href="${'/items/'+item.getId()}">
-                            <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath()}">
+                            <img width="300" height="300" th:src="${item.getImgPath()}">
                         </a>
                     </td>
                 </tr>
@@ -48,7 +48,7 @@
     </tr>
     <tr>
         <td>
-            <h3 th:text="${'Сумма: '+order.totalSum()}+' руб.'"></h3>
+            <h3 th:text="${'Сумма: '+order.getTotalSum()}+' руб.'"></h3>
         </td>
     </tr>
 </table>

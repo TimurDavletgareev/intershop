@@ -9,6 +9,7 @@ import ru.yandex.intershop.entity.CartPosition;
 import ru.yandex.intershop.entity.Item;
 import ru.yandex.intershop.mapper.ItemMapper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,19 +25,25 @@ public class CartService {
     private final ItemMapper itemMapper;
 
     public CartDto find() {
-        log.info("Find cartContent");
-        Long userId = userService.getCurrentUserId();
-        Map<ItemDto, Integer> cartItems = new HashMap<>();
-        List<CartPosition> cartContent = cartEntityService.findByUserId(userId);
-        List<Long> itemIds = cartContent.stream().map(CartPosition::getItemId).toList();
-        List<Item> items = itemEntityService.findByIdIn(itemIds);
-        for (Item item : items) {
-            ItemDto itemDto = itemMapper.mapFrom(item);
-            cartItems.put(itemDto, cartItems.getOrDefault(itemDto, 0));
-        }
+        log.info("Find cartPositions");
         CartDto cartDto = new CartDto();
-        cartDto.setUserItems(cartItems);
-        log.info("UserCartContent by userId={} found, size={}", userId, cartContent.size());
+        Long userId = userService.getCurrentUserId();
+        List<CartPosition> cartPositions = cartEntityService.findByUserId(userId);
+        Map<Long, Integer> quantityByItemId = new HashMap<>();
+        for (CartPosition cartPosition : cartPositions) {
+            quantityByItemId.put(cartPosition.getItemId(), cartPosition.getAmount());
+        }
+        cartDto.setQuantityByItemId(quantityByItemId);
+        List<Long> itemIds = cartPositions.stream().map(CartPosition::getItemId).toList();
+        List<Item> items = itemEntityService.findByIdIn(itemIds);
+        List<ItemDto> cartItems = new ArrayList<>();
+        for (Item item : items) {
+            ItemDto itemDto = itemMapper.map(item);
+            itemDto.setCount(quantityByItemId.get(item.getId()));
+            cartItems.add(itemDto);
+        }
+        cartDto.setItems(cartItems);
+        log.info("UserCartContent by userId={} found, size={}", userId, cartItems.size());
         return cartDto;
     }
 
@@ -66,8 +73,15 @@ public class CartService {
                 && oldQuantity > 0) {
             newQuantity = oldQuantity - 1;
         }
+        if (newQuantity == 0) {
+            cartEntityService.delete(cartPosition.getId());
+            return;
+        }
         cartPosition.setAmount(newQuantity);
         cartEntityService.save(cartPosition);
     }
 
+    public void deleteByUserId(Long userId) {
+        cartEntityService.deleteByUserId(userId);
+    }
 }

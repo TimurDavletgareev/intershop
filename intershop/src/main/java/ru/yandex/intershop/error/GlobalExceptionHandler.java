@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR) // 500
     public String handleAnyOtherException(final Exception e, Model model) {
-        log.error(e.getMessage());
+        log.error(e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse(e.getClass().getName(), e.getMessage());
         model.addAttribute("errorResponse", errorResponse);
         return "error";
