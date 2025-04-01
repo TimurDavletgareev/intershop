@@ -3,7 +3,7 @@ package ru.yandex.intershop.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.intershop.repository.UserRepository;
+import ru.yandex.intershop.repository.UserR2dbcRepository;
 
 @Service
 @Slf4j
@@ -12,7 +12,7 @@ public class UserService {
 
     private static final Long CURRENT_USER_ID = 1L;
 
-    private final UserRepository userRepository;
+    private final UserR2dbcRepository userR2dbcRepository;
 
     public Long getCurrentUserId() {
         log.info("Getting current user id");
