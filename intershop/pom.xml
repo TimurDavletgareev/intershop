@@ -10,9 +10,9 @@
 	</parent>
 	<groupId>ru.yandex</groupId>
 	<artifactId>intershop</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>intershop</name>
-	<description>Витрина интернет-магазина</description>
+	<description>Витрина интернет-магазина на реактивном стеке</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -69,6 +69,35 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- API R2DBC -->
+		<dependency>
+			<groupId>io.r2dbc</groupId>
+			<artifactId>r2dbc-spi</artifactId>
+			<version>1.0.0.RELEASE</version>
+		</dependency>
+
+		<!-- Драйвер R2DBC для PostgreSQL -->
+		<dependency>
+			<groupId>io.r2dbc</groupId>
+			<artifactId>r2dbc-postgresql</artifactId>
+			<version>0.8.13.RELEASE</version>
+		</dependency>
+
+		<!-- Реактивные потоки (Reactive Streams) -->
+		<dependency>
+			<groupId>org.reactivestreams</groupId>
+			<artifactId>reactive-streams</artifactId>
+			<version>1.0.4</version>
+		</dependency>
+
+		<!-- Project Reactor -->
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-core</artifactId>
+			<version>3.6.0</version>
+		</dependency>
+
 
 	</dependencies>
 
