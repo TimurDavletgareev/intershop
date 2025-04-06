@@ -3,10 +3,12 @@ package ru.yandex.intershop.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.yandex.intershop.dto.CartDto;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.yandex.intershop.dto.ItemDto;
 import ru.yandex.intershop.entity.Item;
 import ru.yandex.intershop.mapper.ItemMapper;
@@ -14,7 +16,6 @@ import ru.yandex.intershop.util.PageRequestCreator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -26,16 +27,13 @@ public class ItemService {
     private final ItemMapper itemMapper;
     private static final int ROW_SIZE = 3;
 
-    public ItemDto findById(Long itemId) {
+    public Mono<ItemDto> findById(Long itemId) {
         log.info("Find ItemDto by itemId: {}", itemId);
-        ItemDto itemDto = itemMapper.map(itemEntityService.findById(itemId));
-        CartDto cartDto = cartService.find();
-        Map<Long, Integer> userItems = cartDto.getQuantityByItemId();
-        itemDto.setCount(userItems.getOrDefault(itemId, 0));
-        return itemDto;
+        return itemEntityService.findById(itemId)
+                .map(itemMapper::map);
     }
 
-    public Page<ItemDto> find(String searchString, String sortString, int pageNumber, int pageSize) {
+    public Mono<Page<ItemDto>> find(String searchString, String sortString, int pageNumber, int pageSize) {
         log.info("Search pagedItems by searchString={}, sortString={}, pageNumber={}, pageSize={}",
                 searchString, sortString, pageNumber, pageSize);
         Sort sort = Sort.by("id");
@@ -46,22 +44,17 @@ public class ItemService {
             sort = Sort.by("price");
         }
         Pageable pageable = PageRequestCreator.create(pageNumber, pageSize, sort);
-        Page<Item> pagedItems;
+        Flux<Item> itemFlux;
         if (searchString == null || searchString.isEmpty()) {
-            pagedItems = itemEntityService.findAll(pageable);
+            itemFlux = itemEntityService.findAll(pageable);
         } else {
-            pagedItems = itemEntityService.findByTitle(searchString, pageable);
+            itemFlux = itemEntityService.findByTitle(searchString, pageable);
         }
-        Page<ItemDto> pagedItemDtos = pagedItems.map(itemMapper::map);
-
-        CartDto cartDto = cartService.find();
-        Map<Long, Integer> quantityByItemId = cartDto.getQuantityByItemId();
-        for (ItemDto itemDto : pagedItemDtos) {
-            itemDto.setCount(quantityByItemId.getOrDefault(itemDto.getId(), 0));
-        }
-        log.info("Found {} pagedItems by searchString={}, sortString={}, pageNumber={}, pageSize={}",
-                pagedItemDtos.getTotalElements(), searchString, sortString, pageNumber, pageSize);
-        return pagedItemDtos;
+        return itemFlux
+                .map(itemMapper::map)
+                .collectList()
+                .zipWith(itemEntityService.count())
+                .map(p -> new PageImpl<>(p.getT1(), pageable, p.getT2()));
     }
 
     public List<List<ItemDto>> createItemsLists(Page<ItemDto> page) {

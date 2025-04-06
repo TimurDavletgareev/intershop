@@ -1,16 +1,18 @@
 package ru.yandex.intershop.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+import reactor.util.annotation.NonNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity
 @Table(name = "users")
 @Getter
 @Setter
@@ -18,20 +20,21 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column
+    @NonNull
     private String name;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column
+    @NonNull
     private String email;
 
-    @Column(name = "birth_date")
+    @Column
     private LocalDate birthDate;
 
-    @Column(name = "reg_date")
+    @Column
     private LocalDateTime regDate;
 
     @JsonIgnore

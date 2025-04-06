@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.intershop.dto.ItemDto;
+import reactor.core.publisher.Mono;
 import ru.yandex.intershop.service.CartService;
 import ru.yandex.intershop.service.ItemService;
 
@@ -17,17 +17,20 @@ public class ItemController {
     private final CartService cartService;
 
     @GetMapping("/{itemId}")
-    public String getItem(@PathVariable Long itemId,
-                          Model model) {
-        ItemDto itemDto = itemService.findById(itemId);
-        model.addAttribute("item", itemDto);
-        return "item";
+    public Mono<String> getItem(@PathVariable Long itemId,
+                                Model model) {
+        return itemService.findById(itemId)
+                .map(itemDto -> {
+                    model.addAttribute("item", itemDto);
+                    return "item";
+                });
     }
 
     @PostMapping("/{itemId}")
-    public String changeCount(@PathVariable Long itemId,
-                              @RequestParam String action) {
-        cartService.changeItemQuantity(itemId, action);
-        return "redirect:/items/" + itemId;
+    public Mono<String> changeCount(@PathVariable Long itemId,
+                                    @RequestParam String action) {
+        return cartService.changeItemQuantity(itemId, action)
+                .then(Mono.just("redirect:/items/" + itemId));
+
     }
 }

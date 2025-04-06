@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import reactor.core.publisher.Mono;
 
 @Controller
 @RequiredArgsConstructor
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class RedirectController {
 
     @GetMapping
-    public String redirect() {
-        return "redirect:/main/items";
+    public Mono<String> redirect() {
+        return Mono.just("redirect:/main/items");
     }
 }

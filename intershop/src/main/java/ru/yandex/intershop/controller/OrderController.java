@@ -6,10 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import ru.yandex.intershop.dto.OrderDto;
+import reactor.core.publisher.Mono;
 import ru.yandex.intershop.service.OrderService;
-
-import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -19,16 +17,20 @@ public class OrderController {
     private final OrderService orderService;
 
     @GetMapping
-    public String getOrders(Model model) {
-        List<OrderDto> orders = orderService.find();
-        model.addAttribute("orders", orders);
-        return "orders";
+    public Mono<String> getOrders(Model model) {
+        return orderService.find()
+                .map(orders -> {
+                    model.addAttribute("orders", orders);
+                    return "orders";
+                });
     }
 
     @GetMapping("/{orderUid}")
-    public String getOrder(@PathVariable String orderUid, Model model) {
-        OrderDto order = orderService.findByOrderUid(orderUid);
-        model.addAttribute("order", order);
-        return "order";
+    public Mono<String> getOrder(@PathVariable String orderUid, Model model) {
+        return orderService.findByOrderUid(orderUid)
+                .map(order -> {
+                    model.addAttribute("order", order);
+                    return "order";
+                });
     }
 }

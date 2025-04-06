@@ -1,12 +1,16 @@
 package ru.yandex.intershop.entity;
 
-import jakarta.persistence.*;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+import reactor.util.annotation.NonNull;
 
-@Entity
+
 @Table(name = "items")
 @Getter
 @Setter
@@ -14,22 +18,24 @@ import lombok.ToString;
 public class Item {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @Column(name = "title", nullable = false, unique = true)
+    @Column
+    @NonNull
     private String title;
 
-    @Column(name = "description")
+    @Column
     private String description;
 
-    @Column(name = "image_url")
+    @Column
     private String imageUrl;
 
-    @Column(name = "amount_in_stock", nullable = false)
+    @Column
+    @NonNull
     private Integer amountInStock;
 
-    @Column(name = "price", nullable = false)
+    @Column
+    @NonNull
     private Integer price;
 }

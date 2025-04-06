@@ -2,14 +2,14 @@ package ru.yandex.intershop.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.yandex.intershop.entity.Item;
-import ru.yandex.intershop.repository.ItemRepository;
+import ru.yandex.intershop.repository.ItemR2dbcRepository;
 
-import java.util.Optional;
 import java.util.List;
 
 @Service
@@ -18,53 +18,40 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ItemEntityService {
 
-    private final ItemRepository itemRepository;
+    private final ItemR2dbcRepository itemR2dbcRepository;
 
-    public Page<Item> findAll(Pageable pageable) {
+    public Flux<Item> findAll(Pageable pageable) {
         log.info("Finding all items");
-        Page<Item> items = itemRepository.findAll(pageable);
-        log.info("Found {} items", items.getTotalElements());
-        return items;
+        return itemR2dbcRepository.findByAmountInStockGreaterThan(0, pageable);
     }
 
-    public Item findById(Long id) {
+    public Mono<Item> findById(Long id) {
         log.info("Find Item by id: {}", id);
-        Optional<Item> item = itemRepository.findById(id);
-        if (item.isPresent()) {
-            log.info("Item by id={} found successfully", id);
-            return item.get();
-        }
-        log.info("Item by id={} not found", id);
-        return null;
+        return itemR2dbcRepository.findById(id)
+                .doOnNext(item -> log.info("Item by id={} found: {}", id, item));
     }
 
-    public List<Item> findByIdIn(List<Long> ids) {
+    public Flux<Item> findByIdIn(List<Long> ids) {
         log.info("Find Items by ids");
-        List<Item> items = itemRepository.findByIdIn(ids);
-        if (!items.isEmpty()) {
-            log.info("Items by ids found successfully, ids list size={}", ids.size());
-        } else {
-            log.info("Item by ids not found, ids list size={}", ids.size());
-        }
-        return items;
+        return itemR2dbcRepository.findByIdIn(ids);
     }
 
-    public Page<Item> findByTitle(String title, Pageable pageable) {
+    public Flux<Item> findByTitle(String title, Pageable pageable) {
         log.info("Finding items by title: {}", title);
-        Page<Item> items = itemRepository.findByTitleContainsIgnoreCase(title, pageable);
-        log.info("Found {} items by title: {}", items.getTotalElements(), title);
-        return items;
+        return itemR2dbcRepository.findByTitleContainsIgnoreCase(title, pageable);
     }
 
-    public Page<Item> findByPriceBetween(Integer minPrice, Integer maxPrice, Pageable pageable) {
+    public Flux<Item> findByPriceBetween(Integer minPrice, Integer maxPrice, Pageable pageable) {
         log.info("Finding items by price between: {} - {}", minPrice, maxPrice);
-        Page<Item> items = itemRepository.findByPriceBetween(minPrice, maxPrice, pageable);
-        log.info("Found {} items by by price between: {} - {}", items.getTotalElements(), minPrice, maxPrice);
-        return items;
+        return itemR2dbcRepository.findByPriceBetween(minPrice, maxPrice, pageable);
     }
 
-    public Integer findMaxPrice() {
+    public Mono<Integer> findMaxPrice() {
         log.info("Finding max price");
-        return itemRepository.findMaxPrice();
+        return itemR2dbcRepository.findMaxPrice();
+    }
+
+    public Mono<Long> count() {
+        return itemR2dbcRepository.count();
     }
 }

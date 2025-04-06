@@ -3,6 +3,8 @@ package ru.yandex.intershop.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import ru.yandex.intershop.dto.CartDto;
 import ru.yandex.intershop.dto.ItemDto;
 import ru.yandex.intershop.entity.CartPosition;
@@ -24,46 +26,66 @@ public class CartService {
     private final ItemEntityService itemEntityService;
     private final ItemMapper itemMapper;
 
-    public CartDto find() {
+    public Mono<CartDto> find() {
         log.info("Find cartPositions");
         CartDto cartDto = new CartDto();
         Long userId = userService.getCurrentUserId();
-        List<CartPosition> cartPositions = cartEntityService.findByUserId(userId);
-        Map<Long, Integer> quantityByItemId = new HashMap<>();
-        for (CartPosition cartPosition : cartPositions) {
-            quantityByItemId.put(cartPosition.getItemId(), cartPosition.getAmount());
-        }
-        cartDto.setQuantityByItemId(quantityByItemId);
-        List<Long> itemIds = cartPositions.stream().map(CartPosition::getItemId).toList();
-        List<Item> items = itemEntityService.findByIdIn(itemIds);
-        List<ItemDto> cartItems = new ArrayList<>();
-        for (Item item : items) {
-            ItemDto itemDto = itemMapper.map(item);
-            itemDto.setCount(quantityByItemId.get(item.getId()));
-            cartItems.add(itemDto);
-        }
-        cartDto.setItems(cartItems);
-        log.info("UserCartContent by userId={} found, size={}", userId, cartItems.size());
-        return cartDto;
+        return cartEntityService.findByUserId(userId)
+                .publishOn(Schedulers.boundedElastic())
+                .map(cartPositions -> {
+                    Map<Long, Integer> quantityByItemId = new HashMap<>();
+                    for (CartPosition cartPosition : cartPositions) {
+                        quantityByItemId.put(cartPosition.getItemId(), cartPosition.getAmount());
+                    }
+                    cartDto.setQuantityByItemId(quantityByItemId);
+                    List<Long> itemIds = cartPositions.stream().map(CartPosition::getItemId).toList();
+                    List<Item> items = itemEntityService.findByIdIn(itemIds).toStream().toList();
+                    List<ItemDto> cartItems = new ArrayList<>();
+                    for (Item item : items) {
+                        ItemDto itemDto = itemMapper.map(item);
+                        itemDto.setCount(quantityByItemId.get(item.getId()));
+                        cartItems.add(itemDto);
+                    }
+                    cartDto.setItems(cartItems);
+                    log.info("UserCartContent by userId={} found, size={}", userId, cartItems.size());
+                    return cartDto;
+                });
     }
 
-    public void changeItemQuantity(Long itemId, String action) {
+    public Mono<Void> changeItemQuantity(Long itemId, String action) {
         log.info("Changing item quantity in user cartPosition by itemId: {}, action={}", itemId, action);
         Long userId = userService.getCurrentUserId();
-        Item item = itemEntityService.findById(itemId);
-        CartPosition cartPosition = cartEntityService.findByUserIdAndItemId(userId, itemId);
-        if (cartPosition == null && action.equalsIgnoreCase(AmountAction.PLUS.name())) {
-            cartPosition = new CartPosition();
-            cartPosition.setUserId(userId);
-            cartPosition.setItemId(itemId);
-            cartPosition.setItemPrice(item.getPrice());
-            cartPosition.setAmount(1);
-            cartEntityService.save(cartPosition);
-            return;
-        }
-        if (cartPosition == null) {
-            return;
-        }
+
+        return cartEntityService.findByUserIdAndItemId(userId, itemId)
+                .publishOn(Schedulers.boundedElastic())
+                .doOnNext(cartPosition -> {
+                    Item item = itemEntityService.findById(itemId).block();
+                    if (cartPosition == null && action.equalsIgnoreCase(AmountAction.PLUS.name())) {
+                        cartPosition = new CartPosition();
+                        cartPosition.setUserId(userId);
+                        cartPosition.setItemId(itemId);
+                        if (item != null) {
+                            cartPosition.setItemPrice(item.getPrice());
+                        }
+                        cartPosition.setAmount(1);
+                        cartEntityService.save(cartPosition).block();
+                        return;
+                    }
+                    if (cartPosition == null) {
+                        return;
+                    }
+                    int newQuantity = getNewQuantity(action, cartPosition, item);
+                    if (newQuantity == 0) {
+                        cartEntityService.deleteById(cartPosition.getId()).block();
+                        return;
+                    }
+                    cartPosition.setAmount(newQuantity);
+                    cartEntityService.save(cartPosition).block();
+                })
+                .then();
+    }
+
+    private static int getNewQuantity(String action, CartPosition cartPosition, Item item) {
         int oldQuantity = cartPosition.getAmount();
         int newQuantity = 0;
         if (action.equalsIgnoreCase(AmountAction.PLUS.name())
@@ -73,15 +95,10 @@ public class CartService {
                 && oldQuantity > 0) {
             newQuantity = oldQuantity - 1;
         }
-        if (newQuantity == 0) {
-            cartEntityService.delete(cartPosition.getId());
-            return;
-        }
-        cartPosition.setAmount(newQuantity);
-        cartEntityService.save(cartPosition);
+        return newQuantity;
     }
 
-    public void deleteByUserId(Long userId) {
-        cartEntityService.deleteByUserId(userId);
+    public Mono<Void> deleteByUserId(Long userId) {
+        return cartEntityService.deleteByUserId(userId);
     }
 }
