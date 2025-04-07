@@ -26,11 +26,15 @@ public class ItemController {
                 });
     }
 
-    @PostMapping("/{itemId}")
-    public Mono<String> changeCount(@PathVariable Long itemId,
-                                    @RequestParam String action) {
-        return cartService.changeItemQuantity(itemId, action)
+    @PostMapping("/{itemId}/plus")
+    public Mono<String> changeCountPlus(@PathVariable Long itemId) {
+        return cartService.changeItemQuantity(itemId, "plus")
                 .then(Mono.just("redirect:/items/" + itemId));
+    }
 
+    @PostMapping("/{itemId}/minus")
+    public Mono<String> changeCountMinus(@PathVariable Long itemId) {
+        return cartService.changeItemQuantity(itemId, "minus")
+                .then(Mono.just("redirect:/items/" + itemId));
     }
 }

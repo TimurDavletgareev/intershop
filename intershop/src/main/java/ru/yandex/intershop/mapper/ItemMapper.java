@@ -1,10 +1,12 @@
 package ru.yandex.intershop.mapper;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.yandex.intershop.dto.ItemDto;
 import ru.yandex.intershop.entity.Item;
 
 @Component
+@RequiredArgsConstructor
 public class ItemMapper {
 
     public ItemDto map(Item item) {

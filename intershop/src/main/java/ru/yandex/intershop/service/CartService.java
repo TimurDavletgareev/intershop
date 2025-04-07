@@ -2,6 +2,7 @@ package ru.yandex.intershop.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -52,15 +53,42 @@ public class CartService {
                 });
     }
 
+    public Mono<Map<Long, Integer>> getQuantities(Page<ItemDto> page) {
+        return find()
+                .map(cartDto -> {
+                    Map<Long, Integer> quantityByItemIdOnPage = new HashMap<>();
+                    if (cartDto != null && !cartDto.empty()) {
+                        Map<Long, Integer> quantityByItemIdInCart = cartDto.getQuantityByItemId();
+                        page.forEach(itemDto ->
+                                quantityByItemIdOnPage.put(itemDto.getId(),
+                                        quantityByItemIdInCart.getOrDefault(itemDto.getId(), 0)));
+                    } else {
+                        page.forEach(itemDto ->
+                                quantityByItemIdOnPage.put(itemDto.getId(), 0));
+                    }
+                    return quantityByItemIdOnPage;
+                });
+    }
+
+    public Mono<Integer> getCountByItemId(Long itemId) {
+        Long userId = userService.getCurrentUserId();
+        return cartEntityService.findByUserIdAndItemId(userId, itemId)
+                .map(CartPosition::getAmount)
+                .defaultIfEmpty(0);
+    }
+
     public Mono<Void> changeItemQuantity(Long itemId, String action) {
         log.info("Changing item quantity in user cartPosition by itemId: {}, action={}", itemId, action);
         Long userId = userService.getCurrentUserId();
-
         return cartEntityService.findByUserIdAndItemId(userId, itemId)
                 .publishOn(Schedulers.boundedElastic())
+                .defaultIfEmpty(new CartPosition())
                 .doOnNext(cartPosition -> {
                     Item item = itemEntityService.findById(itemId).block();
-                    if (cartPosition == null && action.equalsIgnoreCase(AmountAction.PLUS.name())) {
+                    log.info("Changing item quantity: action={}, item={}, cartPosition={}",
+                            action, item, cartPosition);
+                    if (cartPosition.getId() == null && action.equalsIgnoreCase(AmountAction.PLUS.name())) {
+                        log.info("Setting itemId={} to new cart position of userId={}", itemId, userId);
                         cartPosition = new CartPosition();
                         cartPosition.setUserId(userId);
                         cartPosition.setItemId(itemId);
@@ -71,7 +99,7 @@ public class CartService {
                         cartEntityService.save(cartPosition).block();
                         return;
                     }
-                    if (cartPosition == null) {
+                    if (cartPosition.getId() == null) {
                         return;
                     }
                     int newQuantity = getNewQuantity(action, cartPosition, item);
@@ -98,7 +126,8 @@ public class CartService {
         return newQuantity;
     }
 
-    public Mono<Void> deleteByUserId(Long userId) {
+    public Mono<Void> delete() {
+        Long userId = userService.getCurrentUserId();
         return cartEntityService.deleteByUserId(userId);
     }
 }

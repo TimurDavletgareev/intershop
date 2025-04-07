@@ -34,7 +34,7 @@ public class OrderService {
 
                     List<Order> orderList = getOrders(items, orderUid);
                     orderEntityService.saveAll(orderList).block();
-                    cartService.deleteByUserId(userService.getCurrentUserId()).block();
+                    cartService.delete().block();
                     log.info("Buy order completed, orderUid = {}", orderUid);
                     return orderDto;
                 });
@@ -58,7 +58,7 @@ public class OrderService {
 
     public Mono<OrderDto> findByOrderUid(String orderUid) {
         log.info("Find order by orderUid = {}", orderUid);
-        return orderEntityService.findByUserId(userService.getCurrentUserId())
+        return orderEntityService.findByOrderUid(orderUid)
                 .publishOn(Schedulers.boundedElastic())
                 .collectList()
                 .map(orders -> {
@@ -84,8 +84,8 @@ public class OrderService {
         Long userId = userService.getCurrentUserId();
         log.info("Find all orders by userId = {}", userId);
         return orderEntityService.findByUserId(userId)
-                .collectList()
                 .publishOn(Schedulers.boundedElastic())
+                .collectList()
                 .map(orders -> {
                     Set<String> orderUids = new HashSet<>();
                     for (Order order : orders) {

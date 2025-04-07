@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import ru.yandex.intershop.dto.ItemDto;
 import ru.yandex.intershop.entity.Item;
 import ru.yandex.intershop.mapper.ItemMapper;
@@ -30,7 +31,13 @@ public class ItemService {
     public Mono<ItemDto> findById(Long itemId) {
         log.info("Find ItemDto by itemId: {}", itemId);
         return itemEntityService.findById(itemId)
-                .map(itemMapper::map);
+                .publishOn(Schedulers.boundedElastic())
+                .map(itemMapper::map)
+                .map(itemDto -> {
+                    Integer count = cartService.getCountByItemId(itemId).block();
+                    itemDto.setCount(count);
+                    return itemDto;
+                });
     }
 
     public Mono<Page<ItemDto>> find(String searchString, String sortString, int pageNumber, int pageSize) {
@@ -50,7 +57,10 @@ public class ItemService {
         } else {
             itemFlux = itemEntityService.findByTitle(searchString, pageable);
         }
+        /*CartDto cartDto = cartService.find().block();
+        Map<Long, Integer> userItems = cartDto.getQuantityByItemId();*/
         return itemFlux
+                .publishOn(Schedulers.boundedElastic())
                 .map(itemMapper::map)
                 .collectList()
                 .zipWith(itemEntityService.count())
