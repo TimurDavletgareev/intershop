@@ -1,0 +1,9 @@
+version: '3.1'
+
+services:
+
+  intershop:
+    build: .
+    container_name: intershop_react_container
+    ports:
+      - "8080:8080"
