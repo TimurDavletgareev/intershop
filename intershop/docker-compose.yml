@@ -4,22 +4,6 @@ services:
 
   intershop:
     build: .
-    container_name: intershop_container
+    container_name: intershop_react_container
     ports:
       - "8080:8080"
-    depends_on:
-      - intershop-db
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://intershop-db:5432/intershop-db
-      - POSTGRES_USER=main-db-user
-      - POSTGRES_PASSWORD=maindb
-
-  intershop-db:
-    image: postgres:14-alpine
-    container_name: intershop-db_container
-    ports:
-      - "8765:5432"
-    environment:
-      - POSTGRES_DB=intershop-db
-      - POSTGRES_USER=main-db-user
-      - POSTGRES_PASSWORD=maindb

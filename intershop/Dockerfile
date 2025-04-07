@@ -1,3 +1,3 @@
 FROM amazoncorretto:21
-COPY target/*.jar intershop.jar
-ENTRYPOINT ["java","-jar","/intershop.jar"]
+COPY target/*.jar intershop_react.jar
+ENTRYPOINT ["java","-jar","/intershop_react.jar"]
