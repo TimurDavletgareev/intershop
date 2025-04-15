@@ -11,8 +11,7 @@ public class PageRequestCreator {
         PageRequest pageRequest;
 
         if (size > 0 && from >= 0) {
-            int page = from / size;
-            pageRequest = PageRequest.of(page, size, sort);
+            pageRequest = PageRequest.of(from, size, sort);
         } else {
             throw new IncorrectRequestException("- Page size must be > 0, 'from' must be >= 0, " +
                     "'sort' must be proper class field");

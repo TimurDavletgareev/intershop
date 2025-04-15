@@ -43,7 +43,7 @@
                 <p>
                     <button th:if="${paging.hasPrevious()}" name="pageNumber" th:value="${paging.pageNumber()-1}">&lt;
                     </button>
-                    <span th:text="${'Страница: '+paging.pageNumber()}"></span>
+                    <span th:text="'Страница: '+${paging.pageNumber()+1}"></span>
                     <button th:if="${paging.hasNext()}" name="pageNumber" th:value="${paging.pageNumber()+1}">&gt;
                     </button>
                 </p>
