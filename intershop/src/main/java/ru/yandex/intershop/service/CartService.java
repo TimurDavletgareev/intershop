@@ -11,6 +11,8 @@ import ru.yandex.intershop.dto.ItemDto;
 import ru.yandex.intershop.entity.CartPosition;
 import ru.yandex.intershop.entity.Item;
 import ru.yandex.intershop.mapper.ItemMapper;
+import ru.yandex.intershop.service.entity.CartEntityService;
+import ru.yandex.intershop.service.entity.ItemEntityService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -129,5 +131,10 @@ public class CartService {
     public Mono<Void> delete() {
         Long userId = userService.getCurrentUserId();
         return cartEntityService.deleteByUserId(userId);
+    }
+
+    private enum AmountAction {
+        PLUS,
+        MINUS
     }
 }

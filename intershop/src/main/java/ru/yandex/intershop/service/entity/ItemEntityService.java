@@ -1,4 +1,4 @@
-package ru.yandex.intershop.service;
+package ru.yandex.intershop.service.entity;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
