@@ -3,7 +3,6 @@ package ru.yandex.intershop.mapper;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import ru.yandex.intershop.dto.PagingDto;
-import ru.yandex.intershop.entity.Item;
 
 @Component
 public class PagingMapper {
