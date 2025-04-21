@@ -33,7 +33,7 @@ paths:
     post:
       tags:
         - "payment-controller"
-      operationId: "balance"
+      operationId: "pay"
       parameters:
         - name: "userId"
           in: "path"
