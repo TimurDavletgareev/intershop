@@ -23,6 +23,7 @@
 	</developers>
 	<modules>
 		<module>main-service</module>
+		<module>payment-service</module>
 	</modules>
 	<scm>
 		<connection/>
