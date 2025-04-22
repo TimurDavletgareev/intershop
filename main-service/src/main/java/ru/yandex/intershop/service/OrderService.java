@@ -8,6 +8,7 @@ import reactor.core.scheduler.Schedulers;
 import ru.yandex.intershop.dto.ItemDto;
 import ru.yandex.intershop.dto.OrderDto;
 import ru.yandex.intershop.entity.Order;
+import ru.yandex.intershop.payment_client.PaymentService;
 import ru.yandex.intershop.service.entity.OrderEntityService;
 
 import java.util.*;
@@ -21,6 +22,7 @@ public class OrderService {
     private final CartService cartService;
     private final UserService userService;
     private final ItemService itemService;
+    private final PaymentService paymentService;
 
     public Mono<OrderDto> buy() {
         log.info("Buy order");
@@ -33,6 +35,7 @@ public class OrderService {
                     orderDto.setOrderUid(orderUid);
                     orderDto.setItems(items);
 
+                    paymentService.makePayment(userService.getCurrentUserId(), cartDto.total()).block();
                     List<Order> orderList = getOrders(items, orderUid);
                     orderEntityService.saveAll(orderList).block();
                     cartService.delete().block();

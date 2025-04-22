@@ -36,6 +36,8 @@
                             <apiPackage>ru.yandex.intershop.api</apiPackage>
                             <invokerPackage>ru.yandex.intershop.client</invokerPackage>
                             <modelPackage>ru.yandex.intershop.client.domain</modelPackage>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
                             <configOptions>
                                 <interfaceOnly>true</interfaceOnly>
                                 <library>webclient</library>
