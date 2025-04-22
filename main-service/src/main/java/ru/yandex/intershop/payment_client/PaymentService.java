@@ -22,11 +22,6 @@ public class PaymentService {
 
     public Mono<Void> makePayment(Long userId, Integer amount) {
         log.info("Making payment for user {} with amount {}", userId, amount);
-        return paymentControllerApi.pay(userId, amount)
-                .doOnNext(balance -> {
-                    if (balance < amount) {
-                        throw new RuntimeException("Payment failed, not enough balance");
-                    }
-                }).then();
+        return paymentControllerApi.pay(userId, amount).then();
     }
 }

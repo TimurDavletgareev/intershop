@@ -8,6 +8,7 @@ import reactor.core.scheduler.Schedulers;
 import ru.yandex.intershop.dto.ItemDto;
 import ru.yandex.intershop.dto.OrderDto;
 import ru.yandex.intershop.entity.Order;
+import ru.yandex.intershop.error.exception.ConflictOnRequestException;
 import ru.yandex.intershop.payment_client.PaymentService;
 import ru.yandex.intershop.service.entity.OrderEntityService;
 
@@ -28,19 +29,25 @@ public class OrderService {
         log.info("Buy order");
         return cartService.find()
                 .publishOn(Schedulers.boundedElastic())
-                .map(cartDto -> {
+                .handle((cartDto, sink) -> {
+                    Long userId = userService.getCurrentUserId();
+                    Integer balance = paymentService.getBalance(userId).block();
+                    if (balance == null || cartDto.total() > balance) {
+                        sink.error(new ConflictOnRequestException("Not enough balance"));
+                        return;
+                    }
                     List<ItemDto> items = cartDto.getItems();
                     OrderDto orderDto = new OrderDto();
                     String orderUid = UUID.randomUUID().toString();
                     orderDto.setOrderUid(orderUid);
                     orderDto.setItems(items);
 
-                    paymentService.makePayment(userService.getCurrentUserId(), cartDto.total()).block();
+                    paymentService.makePayment(userId, cartDto.total()).block();
                     List<Order> orderList = getOrders(items, orderUid);
                     orderEntityService.saveAll(orderList).block();
                     cartService.delete().block();
                     log.info("Buy order completed, orderUid = {}", orderUid);
-                    return orderDto;
+                    sink.next(orderDto);
                 });
     }
 
