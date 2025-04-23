@@ -2,8 +2,18 @@ version: '3.1'
 
 services:
 
-  intershop:
-    build: ../intershop
+  main-service:
+    build: ./main-service
     container_name: intershop_react_container
     ports:
       - "8080:8080"
+    depends_on:
+      - payment-service
+    environment:
+      - INTERSHOP_PAYMENT_URL=http://payment-service:9090
+
+  payment-service:
+    build: ./payment-service
+    container_name: intershop_payment_container
+    ports:
+      - "9090:9090"
