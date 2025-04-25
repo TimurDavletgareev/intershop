@@ -2,6 +2,7 @@ package ru.yandex.intershop.service.entity;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
@@ -18,12 +19,6 @@ public class CartEntityService {
 
     private final CartR2dbcRepository cartR2dbcRepository;
 
-    public Mono<CartPosition> findById(Long id) {
-        log.info("Find CartPosition by id: {}", id);
-        return cartR2dbcRepository.findById(id)
-                .doOnNext(cartPosition -> log.info("Found CartPosition by Id={}: {}", id, cartPosition));
-    }
-
     public Mono<CartPosition> findByUserIdAndItemId(Long userId, Long itemId) {
         log.info("Find CartPosition by userId={} and itemId={}", userId, itemId);
         return cartR2dbcRepository.findByUserIdAndItemId(userId, itemId)
@@ -31,6 +26,7 @@ public class CartEntityService {
                         userId, itemId, cartPosition));
     }
 
+    @Cacheable(value = "cart", key = "#userId")
     public Mono<List<CartPosition>> findByUserId(Long userId) {
         log.info("Find CartPositions by userId: {}", userId);
         return cartR2dbcRepository.findByUserId(userId)
@@ -49,9 +45,7 @@ public class CartEntityService {
     public Mono<Void> save(CartPosition cartPosition) {
         log.info("Save CartPosition: {}", cartPosition);
         return cartR2dbcRepository.save(cartPosition)
-                .doOnNext(it -> {
-                    log.info("Saved CartPosition: {}", it);
-                })
+                .doOnNext(it -> log.info("Saved CartPosition: {}", it))
                 .then();
     }
 
