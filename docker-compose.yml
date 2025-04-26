@@ -8,12 +8,23 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      - redis
       - payment-service
     environment:
       - INTERSHOP_PAYMENT_URL=http://payment-service:9090
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_TTL=PT5S
+    links:
+      - redis
 
   payment-service:
     build: ./payment-service
     container_name: intershop_payment_container
     ports:
       - "9090:9090"
+
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
