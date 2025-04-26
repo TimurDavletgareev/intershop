@@ -1,0 +1,62 @@
+openapi: 3.0.1
+info:
+  title: API Payment service
+  description: Описание REST API Payment service для магазина Intershop
+  termsOfService: http://swagger.io/terms/
+  version: 0.0.1
+paths:
+  /payment/balance/{userId}:
+    get:
+      tags:
+        - "payment-controller"
+      operationId: "balance"
+      parameters:
+        - name: "userId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+          example: 2344355346346
+      responses:
+        200:
+          description: OK - операция завершилась успешно
+          content:
+            application/json:
+              schema:
+                type: "integer"
+                format: "int32"
+        500:
+          description: Внутренняя ошибка сервера. Возникает при введении некорректных данных.
+      summary: Получить баланс пользователя по userId
+  /payment/pay/{userId}/{amount}:
+    post:
+      tags:
+        - "payment-controller"
+      operationId: "pay"
+      parameters:
+        - name: "userId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+          example: 2344355346346
+        - name: "amount"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+          example: 2344
+      responses:
+        200:
+          description: OK - операция завершилась успешно
+          content:
+            application/json:
+              schema:
+                type: "integer"
+                format: "int32"
+        500:
+          description: Внутренняя ошибка сервера. Возникает при введении некорректных данных.
+      summary: Списать сумму amount с баланса пользователя по userId
