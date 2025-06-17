@@ -31,6 +31,6 @@ public class UserService implements ReactiveUserDetailsService {
         // Загружаем сущность User из базы данных
         return userEntityService.findByUsername(username)
                 .map(user -> new org.springframework.security.core.userdetails.User(
-                        user.getName(), user.getPassword(), roleService.getRoles(user.getId())));
+                        user.getUsername(), user.getPassword(), roleService.getRoles(user.getId())));
     }
 }

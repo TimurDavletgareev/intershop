@@ -25,7 +25,7 @@ public class User {
 
     @Column
     @NonNull
-    private String name;
+    private String username;
 
     @Column
     @NonNull

@@ -1,4 +1,4 @@
-insert into users(name, email, birth_date, reg_date, password)
+insert into users(username, email, birth_date, reg_date, password)
 values ('User 1',
         'user1@email.net',
         null,
