@@ -20,4 +20,9 @@ public class UserEntityService {
         log.info("Find user by id: {}", id);
         return userR2dbcRepository.findById(id);
     }
+
+    public Mono<User> findByUsername(String username) {
+        log.info("Find user by username: {}", username);
+        return userR2dbcRepository.findByUsername(username);
+    }
 }

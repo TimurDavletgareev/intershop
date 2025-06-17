@@ -37,6 +37,8 @@ public class User {
     @Column
     private LocalDateTime regDate;
 
+    @Column
+
     @JsonIgnore
     @ToString.Exclude
     private String password;
