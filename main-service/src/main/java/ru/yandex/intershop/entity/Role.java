@@ -1,6 +1,5 @@
 package ru.yandex.intershop.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,14 +9,11 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import reactor.util.annotation.NonNull;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-@Table(name = "users")
+@Table(name = "roles")
 @Getter
 @Setter
 @ToString
-public class User {
+public class Role {
 
     @Id
     @Setter(AccessLevel.NONE)
@@ -25,19 +21,9 @@ public class User {
 
     @Column
     @NonNull
-    private String name;
+    private Long userId;
 
     @Column
     @NonNull
-    private String email;
-
-    @Column
-    private LocalDate birthDate;
-
-    @Column
-    private LocalDateTime regDate;
-
-    @JsonIgnore
-    @ToString.Exclude
-    private String password;
+    private String roleName;
 }
