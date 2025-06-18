@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.logout.HttpStatusReturningServerLogoutSuccessHandler;
 import reactor.core.publisher.Mono;
 import ru.yandex.intershop.service.RoleService;
 import ru.yandex.intershop.service.UserService;
@@ -25,13 +26,17 @@ public class SecurityConfiguration {
         return http
                 .csrf().disable()
                 .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/", "/main/items").permitAll()
                         .anyExchange().authenticated()
                 )
                 .formLogin(withDefaults())
                 /* Вход через OAuth 2.0 провайдеров
                  .oauth2Login()
                 */
-                .logout(logout -> logout.logoutUrl("/"))
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessHandler(new HttpStatusReturningServerLogoutSuccessHandler())
+                )
                 .exceptionHandling(handling -> handling
                         .accessDeniedHandler((exchange, denied) ->
                                 Mono.error(new AccessDeniedException("Access Denied")))

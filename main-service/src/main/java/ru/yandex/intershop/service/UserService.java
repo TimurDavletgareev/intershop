@@ -31,17 +31,13 @@ public class UserService implements ReactiveUserDetailsService {
 
     @Override
     public Mono<UserDetails> findByUsername(String username) throws UsernameNotFoundException {
-        // Загружаем сущность User из базы данных
+        log.info("Getting UserDetails by username: {}", username);
         return userEntityService.findByUsername(username)
                 .publishOn(Schedulers.boundedElastic())
                 .map(user -> new org.springframework.security.core.userdetails.User(
                         user.getUsername(),
-                        encodePassword(user.getPassword()),
+                        passwordEncoder.encode((user.getPassword())), //кодируем, т.к. пользователь создаётся в бд на старте
                         roleService.getRoles(user.getId())
                 ));
-    }
-
-    private String encodePassword(String password) {
-        return passwordEncoder.encode(password);
     }
 }
