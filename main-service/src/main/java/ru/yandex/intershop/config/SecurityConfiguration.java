@@ -6,6 +6,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import reactor.core.publisher.Mono;
 import ru.yandex.intershop.service.RoleService;
@@ -21,6 +23,7 @@ public class SecurityConfiguration {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
+                .csrf().disable()
                 .authorizeExchange(exchanges -> exchanges
                         .anyExchange().authenticated()
                 )
@@ -37,7 +40,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    ReactiveUserDetailsService userDetailsService(UserEntityService userEntityService, RoleService roleService) {
-        return new UserService(userEntityService, roleService);
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

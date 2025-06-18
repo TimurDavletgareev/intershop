@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import ru.yandex.intershop.service.entity.UserEntityService;
 
 @Service
@@ -18,6 +20,7 @@ public class UserService implements ReactiveUserDetailsService {
 
     private final UserEntityService userEntityService;
     private final RoleService roleService;
+    private final PasswordEncoder passwordEncoder;
 
     public Long getCurrentUserId() {
         log.info("Getting current user id");
@@ -30,7 +33,15 @@ public class UserService implements ReactiveUserDetailsService {
     public Mono<UserDetails> findByUsername(String username) throws UsernameNotFoundException {
         // Загружаем сущность User из базы данных
         return userEntityService.findByUsername(username)
+                .publishOn(Schedulers.boundedElastic())
                 .map(user -> new org.springframework.security.core.userdetails.User(
-                        user.getUsername(), user.getPassword(), roleService.getRoles(user.getId())));
+                        user.getUsername(),
+                        encodePassword(user.getPassword()),
+                        roleService.getRoles(user.getId())
+                ));
+    }
+
+    private String encodePassword(String password) {
+        return passwordEncoder.encode(password);
     }
 }
