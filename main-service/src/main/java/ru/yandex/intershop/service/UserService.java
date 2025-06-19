@@ -27,6 +27,11 @@ public class UserService implements ReactiveUserDetailsService {
         log.info("Getting current user id");
         Mono<Long> currentUserId = ReactiveSecurityContextHolder.getContext()
                 .map(context -> context.getAuthentication().getName())
+                .map(name -> {
+                    log.info("Current user name: {}", name);
+                    return name;
+                })
+                .publishOn(Schedulers.boundedElastic())
                 .mapNotNull(name -> userEntityService.findByUsername(name)
                         .map(user -> {
                             if (user == null) {
@@ -39,20 +44,26 @@ public class UserService implements ReactiveUserDetailsService {
                 .defaultIfEmpty(ANONYMOUS_USER_ID);
         return currentUserId
                 .map(id -> {
-                    log.info("Current user id is {}", currentUserId);
-                    return id == null ? ANONYMOUS_USER_ID : id;
+                    id = id == null ? ANONYMOUS_USER_ID : id;
+                    log.info("Current user id is {}", id);
+                    return id;
                 });
     }
 
     @Override
     public Mono<UserDetails> findByUsername(String username) throws UsernameNotFoundException {
         log.info("Getting UserDetails by username: {}", username);
-        return userEntityService.findByUsername(username)
+        Mono<UserDetails> result =  userEntityService.findByUsername(username)
                 .publishOn(Schedulers.boundedElastic())
                 .map(user -> new org.springframework.security.core.userdetails.User(
                         user.getUsername(),
                         passwordEncoder.encode((user.getPassword())), //кодируем, т.к. пользователь создаётся в бд на старте
                         roleService.getRoles(user.getId())
                 ));
+        return result
+                .map(userDetails -> {
+                    log.info("Found UserDetails by username: {} -> {}", username, userDetails);
+                    return userDetails;
+                });
     }
 }

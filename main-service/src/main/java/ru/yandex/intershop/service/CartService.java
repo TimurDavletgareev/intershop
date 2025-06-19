@@ -33,28 +33,33 @@ public class CartService {
     public Mono<CartDto> find() {
         log.info("Find cartPositions");
         CartDto cartDto = new CartDto();
-        Long userId = userService.getCurrentUserId().block();
-        System.out.println("CURRENT USER ID: " + userId);
-        return cartEntityService.findByUserId(userId)
+        return userService.getCurrentUserId()
                 .publishOn(Schedulers.boundedElastic())
-                .map(cartPositions -> {
-                    Map<Long, Integer> quantityByItemId = new HashMap<>();
-                    for (CartPosition cartPosition : cartPositions) {
-                        quantityByItemId.put(cartPosition.getItemId(), cartPosition.getAmount());
-                    }
-                    cartDto.setQuantityByItemId(quantityByItemId);
-                    List<Long> itemIds = cartPositions.stream().map(CartPosition::getItemId).toList();
-                    List<Item> items = itemEntityService.findByIdIn(itemIds).toStream().toList();
-                    List<ItemDto> cartItems = new ArrayList<>();
-                    for (Item item : items) {
-                        ItemDto itemDto = itemMapper.map(item);
-                        itemDto.setCount(quantityByItemId.get(item.getId()));
-                        cartItems.add(itemDto);
-                    }
-                    cartDto.setItems(cartItems);
-                    log.info("UserCartContent by userId={} found, size={}", userId, cartItems.size());
-                    return cartDto;
-                });
+                .mapNotNull(
+                        userId -> cartEntityService.findByUserId(userId)
+                                .publishOn(Schedulers.boundedElastic())
+                                .map(cartPositions -> {
+                                    System.out.println("CURRENT USER ID: " + userId);
+                                    Map<Long, Integer> quantityByItemId = new HashMap<>();
+                                    for (CartPosition cartPosition : cartPositions) {
+                                        quantityByItemId.put(cartPosition.getItemId(), cartPosition.getAmount());
+                                    }
+                                    cartDto.setQuantityByItemId(quantityByItemId);
+                                    List<Long> itemIds = cartPositions.stream().map(CartPosition::getItemId).toList();
+                                    List<Item> items = itemEntityService.findByIdIn(itemIds).toStream().toList();
+                                    List<ItemDto> cartItems = new ArrayList<>();
+                                    for (Item item : items) {
+                                        ItemDto itemDto = itemMapper.map(item);
+                                        itemDto.setCount(quantityByItemId.get(item.getId()));
+                                        cartItems.add(itemDto);
+                                    }
+                                    cartDto.setItems(cartItems);
+                                    log.info("UserCartContent by userId={} found, size={}", userId, cartItems.size());
+                                    return cartDto;
+                                })
+                                .block()
+                )
+                .defaultIfEmpty(cartDto);
     }
 
     public Mono<Map<Long, Integer>> getQuantities(Page<ItemDto> page) {
