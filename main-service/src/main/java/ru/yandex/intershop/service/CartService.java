@@ -33,7 +33,8 @@ public class CartService {
     public Mono<CartDto> find() {
         log.info("Find cartPositions");
         CartDto cartDto = new CartDto();
-        Long userId = userService.getCurrentUserId();
+        Long userId = userService.getCurrentUserId().block();
+        System.out.println("CURRENT USER ID: " + userId);
         return cartEntityService.findByUserId(userId)
                 .publishOn(Schedulers.boundedElastic())
                 .map(cartPositions -> {
@@ -74,7 +75,7 @@ public class CartService {
     }
 
     public Mono<Integer> getCountByItemId(Long itemId) {
-        Long userId = userService.getCurrentUserId();
+        Long userId = userService.getCurrentUserId().block();
         return cartEntityService.findByUserIdAndItemId(userId, itemId)
                 .map(CartPosition::getAmount)
                 .defaultIfEmpty(0);
@@ -82,7 +83,7 @@ public class CartService {
 
     public Mono<Void> changeItemQuantity(Long itemId, String action) {
         log.info("Changing item quantity in user cartPosition by itemId: {}, action={}", itemId, action);
-        Long userId = userService.getCurrentUserId();
+        Long userId = userService.getCurrentUserId().block();
         return cartEntityService.findByUserIdAndItemId(userId, itemId)
                 .publishOn(Schedulers.boundedElastic())
                 .defaultIfEmpty(new CartPosition())
@@ -130,7 +131,7 @@ public class CartService {
     }
 
     public Mono<Void> delete() {
-        Long userId = userService.getCurrentUserId();
+        Long userId = userService.getCurrentUserId().block();
         return cartEntityService.deleteByUserId(userId);
     }
 

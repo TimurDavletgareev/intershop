@@ -30,7 +30,7 @@ public class OrderService {
         return cartService.find()
                 .publishOn(Schedulers.boundedElastic())
                 .handle((cartDto, sink) -> {
-                    Long userId = userService.getCurrentUserId();
+                    Long userId = userService.getCurrentUserId().block();
                     Integer balance = paymentService.getBalance(userId).block();
                     if (balance == null || cartDto.total() > balance) {
                         sink.error(new ConflictOnRequestException("Not enough balance"));
@@ -53,7 +53,7 @@ public class OrderService {
 
     private List<Order> getOrders(List<ItemDto> items, String orderUid) {
         List<Order> orderList = new ArrayList<>();
-        Long userId = userService.getCurrentUserId();
+        Long userId = userService.getCurrentUserId().block();
         for (ItemDto itemDto : items) {
             Order order = new Order();
             order.setOrderUid(orderUid);
@@ -92,7 +92,7 @@ public class OrderService {
     }
 
     public Mono<List<OrderDto>> find() {
-        Long userId = userService.getCurrentUserId();
+        Long userId = userService.getCurrentUserId().block();
         log.info("Find all orders by userId = {}", userId);
         return orderEntityService.findByUserId(userId)
                 .publishOn(Schedulers.boundedElastic())

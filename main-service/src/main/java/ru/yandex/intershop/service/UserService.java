@@ -2,6 +2,7 @@ package ru.yandex.intershop.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,17 +17,31 @@ import ru.yandex.intershop.service.entity.UserEntityService;
 @RequiredArgsConstructor
 public class UserService implements ReactiveUserDetailsService {
 
-    private static final Long CURRENT_USER_ID = 1L;
+    private static final Long ANONYMOUS_USER_ID = -1L;
 
     private final UserEntityService userEntityService;
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
 
-    public Long getCurrentUserId() {
+    public Mono<Long> getCurrentUserId() {
         log.info("Getting current user id");
-        Long currentUserId = CURRENT_USER_ID;
-        log.info("Current user id is {}", currentUserId);
-        return currentUserId;
+        Mono<Long> currentUserId = ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication().getName())
+                .mapNotNull(name -> userEntityService.findByUsername(name)
+                        .map(user -> {
+                            if (user == null) {
+                                return ANONYMOUS_USER_ID;
+                            }
+                            return user.getId();
+                        })
+                        .block()
+                )
+                .defaultIfEmpty(ANONYMOUS_USER_ID);
+        return currentUserId
+                .map(id -> {
+                    log.info("Current user id is {}", currentUserId);
+                    return id == null ? ANONYMOUS_USER_ID : id;
+                });
     }
 
     @Override
