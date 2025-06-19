@@ -58,8 +58,6 @@ public class ItemService {
         } else {
             itemFlux = itemEntityService.findByTitle(searchString, pageable);
         }
-        /*CartDto cartDto = cartService.find().block();
-        Map<Long, Integer> userItems = cartDto.getQuantityByItemId();*/
         return itemFlux
                 .publishOn(Schedulers.boundedElastic())
                 .map(itemMapper::map)
