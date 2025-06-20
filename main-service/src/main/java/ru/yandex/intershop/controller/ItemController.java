@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import ru.yandex.intershop.service.CartService;
 import ru.yandex.intershop.service.ItemService;
+import ru.yandex.intershop.service.UserService;
 
 @Controller
 @RequiredArgsConstructor
@@ -15,10 +16,16 @@ public class ItemController {
 
     private final ItemService itemService;
     private final CartService cartService;
+    private final UserService userService;
 
     @GetMapping("/{itemId}")
     public Mono<String> getItem(@PathVariable Long itemId,
                                 Model model) {
+        //DEBUG
+        userService.getCurrentUserId()
+                .doOnNext(id -> System.out.println("ITEM CONTROLLER /{itemId} userId: " + id))
+                .subscribe();
+        // --DEBUG
         return itemService.findById(itemId)
                 .map(itemDto -> {
                     model.addAttribute("item", itemDto);
