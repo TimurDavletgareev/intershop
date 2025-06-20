@@ -23,7 +23,7 @@ public class SecurityConfiguration {
         return http
                 .csrf().disable()
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/", "/main/**", "items/*").permitAll()
+                        .pathMatchers("/", "/public/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .formLogin(withDefaults())
