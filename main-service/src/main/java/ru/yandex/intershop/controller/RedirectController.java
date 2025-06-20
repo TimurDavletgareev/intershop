@@ -5,14 +5,23 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import reactor.core.publisher.Mono;
+import ru.yandex.intershop.service.UserService;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/")
 public class RedirectController {
 
+    private final UserService userService;
+
     @GetMapping
     public Mono<String> redirect() {
-        return Mono.just("redirect:/main/items");
+        return userService.getCurrentUserId()
+                .map(id -> {
+                    if (id.equals(userService.getAnonymousUserId())) {
+                        return "redirect:/public";
+                    }
+                    return "redirect:/main/items";
+                });
     }
 }
