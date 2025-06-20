@@ -23,6 +23,10 @@ public class UserService implements ReactiveUserDetailsService {
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
 
+    public Long getAnonymousUserId() {
+        return ANONYMOUS_USER_ID;
+    }
+
     public Mono<Long> getCurrentUserId() {
         log.info("Getting current user id");
         Mono<Long> currentUserId = ReactiveSecurityContextHolder.getContext()
