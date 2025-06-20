@@ -29,10 +29,11 @@ public class MainController {
                                    Model model) {
         return itemService.find(search, sort, pageNumber, pageSize)
                 .publishOn(Schedulers.boundedElastic())
-                .doOnNext(page -> {
+                .map(page -> {
                     model.addAttribute("paging", pagingMapper.mapFrom(page));
                     model.addAttribute("items", itemService.createItemsLists(page));
                     model.addAttribute("quantities", cartService.getQuantities(page).block());
+                    return page;
                 })
                 .map(page -> "main");
     }
