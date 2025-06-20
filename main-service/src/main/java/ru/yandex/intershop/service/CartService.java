@@ -39,7 +39,6 @@ public class CartService {
                         userId -> cartEntityService.findByUserId(userId)
                                 .publishOn(Schedulers.boundedElastic())
                                 .map(cartPositions -> {
-                                    System.out.println("CURRENT USER ID: " + userId);
                                     Map<Long, Integer> quantityByItemId = new HashMap<>();
                                     for (CartPosition cartPosition : cartPositions) {
                                         quantityByItemId.put(cartPosition.getItemId(), cartPosition.getAmount());
@@ -80,45 +79,54 @@ public class CartService {
     }
 
     public Mono<Integer> getCountByItemId(Long itemId) {
-        Long userId = userService.getCurrentUserId().block();
-        return cartEntityService.findByUserIdAndItemId(userId, itemId)
-                .map(CartPosition::getAmount)
+        return userService.getCurrentUserId()
+                .publishOn(Schedulers.boundedElastic())
+                .mapNotNull(
+                        userId -> cartEntityService.findByUserIdAndItemId(userId, itemId)
+                                .map(CartPosition::getAmount)
+                                .defaultIfEmpty(0)
+                                .block()
+                )
                 .defaultIfEmpty(0);
     }
 
     public Mono<Void> changeItemQuantity(Long itemId, String action) {
         log.info("Changing item quantity in user cartPosition by itemId: {}, action={}", itemId, action);
-        Long userId = userService.getCurrentUserId().block();
-        return cartEntityService.findByUserIdAndItemId(userId, itemId)
+        return userService.getCurrentUserId()
                 .publishOn(Schedulers.boundedElastic())
-                .defaultIfEmpty(new CartPosition())
-                .doOnNext(cartPosition -> {
-                    Item item = itemEntityService.findById(itemId).block();
-                    log.info("Changing item quantity: action={}, item={}, cartPosition={}",
-                            action, item, cartPosition);
-                    if (cartPosition.getId() == null && action.equalsIgnoreCase(AmountAction.PLUS.name())) {
-                        log.info("Setting itemId={} to new cart position of userId={}", itemId, userId);
-                        cartPosition = new CartPosition();
-                        cartPosition.setUserId(userId);
-                        cartPosition.setItemId(itemId);
-                        if (item != null) {
-                            cartPosition.setItemPrice(item.getPrice());
-                        }
-                        cartPosition.setAmount(1);
-                        cartEntityService.save(cartPosition).block();
-                        return;
-                    }
-                    if (cartPosition.getId() == null) {
-                        return;
-                    }
-                    int newQuantity = getNewQuantity(action, cartPosition, item);
-                    if (newQuantity == 0) {
-                        cartEntityService.deleteById(cartPosition.getId()).block();
-                        return;
-                    }
-                    cartPosition.setAmount(newQuantity);
-                    cartEntityService.save(cartPosition).block();
-                })
+                .mapNotNull(
+                        userId -> cartEntityService.findByUserIdAndItemId(userId, itemId)
+                                .publishOn(Schedulers.boundedElastic())
+                                .defaultIfEmpty(new CartPosition())
+                                .doOnNext(cartPosition -> {
+                                    Item item = itemEntityService.findById(itemId).block();
+                                    log.info("Changing item quantity: action={}, item={}, cartPosition={}",
+                                            action, item, cartPosition);
+                                    if (cartPosition.getId() == null && action.equalsIgnoreCase(AmountAction.PLUS.name())) {
+                                        log.info("Setting itemId={} to new cart position of userId={}", itemId, userId);
+                                        cartPosition = new CartPosition();
+                                        cartPosition.setUserId(userId);
+                                        cartPosition.setItemId(itemId);
+                                        if (item != null) {
+                                            cartPosition.setItemPrice(item.getPrice());
+                                        }
+                                        cartPosition.setAmount(1);
+                                        cartEntityService.save(cartPosition).block();
+                                        return;
+                                    }
+                                    if (cartPosition.getId() == null) {
+                                        return;
+                                    }
+                                    int newQuantity = getNewQuantity(action, cartPosition, item);
+                                    if (newQuantity == 0) {
+                                        cartEntityService.deleteById(cartPosition.getId()).block();
+                                        return;
+                                    }
+                                    cartPosition.setAmount(newQuantity);
+                                    cartEntityService.save(cartPosition).block();
+                                })
+                                .block()
+                )
                 .then();
     }
 
@@ -136,8 +144,10 @@ public class CartService {
     }
 
     public Mono<Void> delete() {
-        Long userId = userService.getCurrentUserId().block();
-        return cartEntityService.deleteByUserId(userId);
+        return userService.getCurrentUserId()
+                .publishOn(Schedulers.boundedElastic())
+                .mapNotNull(cartEntityService::deleteByUserId)
+                .then();
     }
 
     private enum AmountAction {

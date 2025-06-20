@@ -92,23 +92,28 @@ public class OrderService {
     }
 
     public Mono<List<OrderDto>> find() {
-        Long userId = userService.getCurrentUserId().block();
-        log.info("Find all orders by userId = {}", userId);
-        return orderEntityService.findByUserId(userId)
+        return userService.getCurrentUserId()
                 .publishOn(Schedulers.boundedElastic())
-                .collectList()
-                .map(orders -> {
-                    Set<String> orderUids = new HashSet<>();
-                    for (Order order : orders) {
-                        orderUids.add(order.getOrderUid());
-                    }
-                    List<OrderDto> orderDtos = new ArrayList<>();
-                    for (String orderUid : orderUids) {
-                        OrderDto orderDto = findByOrderUid(orderUid).block();
-                        orderDtos.add(orderDto);
-                    }
-                    log.info("Found all orders by userId = {}, list size={}", userId, orderDtos.size());
-                    return orderDtos;
-                });
+                .mapNotNull(
+                        userId -> orderEntityService.findByUserId(userId)
+                                .publishOn(Schedulers.boundedElastic())
+                                .collectList()
+                                .map(orders -> {
+                                    log.info("Find all orders by userId = {}", userId);
+                                    Set<String> orderUids = new HashSet<>();
+                                    for (Order order : orders) {
+                                        orderUids.add(order.getOrderUid());
+                                    }
+                                    List<OrderDto> orderDtos = new ArrayList<>();
+                                    for (String orderUid : orderUids) {
+                                        OrderDto orderDto = findByOrderUid(orderUid).block();
+                                        orderDtos.add(orderDto);
+                                    }
+                                    log.info("Found all orders by userId = {}, list size={}", userId, orderDtos.size());
+                                    return orderDtos;
+                                })
+                                .block()
+                )
+                .defaultIfEmpty(new ArrayList<>());
     }
 }
