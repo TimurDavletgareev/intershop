@@ -14,6 +14,7 @@ import ru.yandex.intershop.mapper.ItemMapper;
 import ru.yandex.intershop.service.entity.CartEntityService;
 import ru.yandex.intershop.service.entity.ItemEntityService;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,10 +31,10 @@ public class CartService {
     private final ItemMapper itemMapper;
 
 
-    public Mono<CartDto> find() {
+    public Mono<CartDto> find(Principal principal) {
         log.info("Find cartPositions");
         CartDto cartDto = new CartDto();
-        return userService.getCurrentUserId()
+        return userService.getCurrentUserId(principal)
                 .publishOn(Schedulers.boundedElastic())
                 .mapNotNull(
                         userId -> cartEntityService.findByUserId(userId)
@@ -61,8 +62,8 @@ public class CartService {
                 .defaultIfEmpty(cartDto);
     }
 
-    public Mono<Map<Long, Integer>> getQuantities(Page<ItemDto> page) {
-        return find()
+    public Mono<Map<Long, Integer>> getQuantities(Page<ItemDto> page, Principal principal) {
+        return find(principal)
                 .map(cartDto -> {
                     Map<Long, Integer> quantityByItemIdOnPage = new HashMap<>();
                     if (cartDto != null && !cartDto.empty()) {
@@ -78,8 +79,8 @@ public class CartService {
                 });
     }
 
-    public Mono<Integer> getCountByItemId(Long itemId) {
-        return userService.getCurrentUserId()
+    public Mono<Integer> getCountByItemId(Long itemId, Principal principal) {
+        return userService.getCurrentUserId(principal)
                 .publishOn(Schedulers.boundedElastic())
                 .mapNotNull(
                         userId -> cartEntityService.findByUserIdAndItemId(userId, itemId)
@@ -90,9 +91,9 @@ public class CartService {
                 .defaultIfEmpty(0);
     }
 
-    public Mono<Void> changeItemQuantity(Long itemId, String action) {
+    public Mono<Void> changeItemQuantity(Long itemId, String action, Principal principal) {
         log.info("Changing item quantity in user cartPosition by itemId: {}, action={}", itemId, action);
-        return userService.getCurrentUserId()
+        return userService.getCurrentUserId(principal)
                 .publishOn(Schedulers.boundedElastic())
                 .mapNotNull(
                         userId -> cartEntityService.findByUserIdAndItemId(userId, itemId)
@@ -143,8 +144,8 @@ public class CartService {
         return newQuantity;
     }
 
-    public Mono<Void> delete() {
-        return userService.getCurrentUserId()
+    public Mono<Void> delete(Principal principal) {
+        return userService.getCurrentUserId(principal)
                 .publishOn(Schedulers.boundedElastic())
                 .mapNotNull(cartEntityService::deleteByUserId)
                 .then();

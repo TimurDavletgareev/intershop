@@ -16,6 +16,7 @@ import ru.yandex.intershop.mapper.ItemMapper;
 import ru.yandex.intershop.service.entity.ItemEntityService;
 import ru.yandex.intershop.util.PageRequestCreator;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,13 +30,13 @@ public class ItemService {
     private final ItemMapper itemMapper;
     private static final int ROW_SIZE = 3;
 
-    public Mono<ItemDto> findById(Long itemId) {
+    public Mono<ItemDto> findById(Long itemId, Principal principal) {
         log.info("Find ItemDto by itemId: {}", itemId);
         return itemEntityService.findById(itemId)
                 .publishOn(Schedulers.boundedElastic())
                 .map(itemMapper::map)
                 .map(itemDto -> {
-                    Integer count = cartService.getCountByItemId(itemId).block();
+                    Integer count = cartService.getCountByItemId(itemId, principal).block();
                     itemDto.setCount(count);
                     return itemDto;
                 });

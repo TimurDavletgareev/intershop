@@ -2,7 +2,6 @@ package ru.yandex.intershop.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -11,6 +10,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import ru.yandex.intershop.service.entity.UserEntityService;
+
+import java.security.Principal;
 
 @Service
 @Slf4j
@@ -27,25 +28,15 @@ public class UserService implements ReactiveUserDetailsService {
         return ANONYMOUS_USER_ID;
     }
 
-    public Mono<Long> getCurrentUserId() {
+    public Mono<Long> getCurrentUserId(Principal principal) {
         log.info("Getting current user id");
-        Mono<Long> currentUserId = ReactiveSecurityContextHolder.getContext()
-                .map(context -> context.getAuthentication().getName())
-                .map(name -> {
-                    log.info("Current user name: {}", name);
-                    return name;
-                })
-                .publishOn(Schedulers.boundedElastic())
-                .mapNotNull(name -> userEntityService.findByUsername(name)
-                        .map(user -> {
-                            if (user == null) {
-                                return ANONYMOUS_USER_ID;
-                            }
-                            return user.getId();
-                        })
-                        .block()
-                )
-                .defaultIfEmpty(ANONYMOUS_USER_ID);
+        Mono<Long> currentUserId = userEntityService.findByUsername(principal.getName())
+                .map(user -> {
+                    if (user == null) {
+                        return ANONYMOUS_USER_ID;
+                    }
+                    return user.getId();
+                });
         return currentUserId
                 .map(id -> {
                     id = id == null ? ANONYMOUS_USER_ID : id;
@@ -57,7 +48,7 @@ public class UserService implements ReactiveUserDetailsService {
     @Override
     public Mono<UserDetails> findByUsername(String username) throws UsernameNotFoundException {
         log.info("Getting UserDetails by username: {}", username);
-        Mono<UserDetails> result =  userEntityService.findByUsername(username)
+        Mono<UserDetails> result = userEntityService.findByUsername(username)
                 .publishOn(Schedulers.boundedElastic())
                 .map(user -> new org.springframework.security.core.userdetails.User(
                         user.getUsername(),
