@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import ru.yandex.intershop.service.CartService;
+import ru.yandex.intershop.service.UserService;
 
 @Controller
 @RequiredArgsConstructor
@@ -13,9 +14,15 @@ import ru.yandex.intershop.service.CartService;
 public class CartController {
 
     private final CartService cartService;
+    private final UserService userService;
 
     @GetMapping
     public Mono<String> getCart(Model model) {
+        //DEBUG
+        userService.getCurrentUserId()
+                .doOnNext(id -> System.out.println("CART CONTROLLER /{itemId} userId: " + id))
+                .subscribe();
+        // --DEBUG
         return cartService.find()
                 .map(cartDto -> {
                     model.addAttribute("items", cartDto.getItems());
