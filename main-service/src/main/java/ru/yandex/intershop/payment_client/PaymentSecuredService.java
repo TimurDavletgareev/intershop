@@ -28,12 +28,7 @@ public class PaymentSecuredService {
     public Mono<Integer> getBalance(Long userId) {
         log.info("Returning balance for user {}", userId);
         String endpoint = "/payment/balance/" + userId;
-        return manager.authorize(OAuth2AuthorizeRequest
-                        .withClientRegistrationId("intershop")
-                        .principal("system")
-                        .build()) // Mono<OAuth2AuthorizedClient>
-                .map(OAuth2AuthorizedClient::getAccessToken)
-                .map(OAuth2AccessToken::getTokenValue)
+        return getAccessToken()
                 .publishOn(Schedulers.boundedElastic())
                 .mapNotNull(accessToken -> webClient.get()
                         .uri(endpoint)
@@ -51,12 +46,7 @@ public class PaymentSecuredService {
     public Mono<Void> makePayment(Long userId, Integer amount) {
         log.info("Making payment for user {} with amount {}", userId, amount);
         String endpoint = String.format("/payment/pay/%d/%d", userId, amount);
-        return manager.authorize(OAuth2AuthorizeRequest
-                        .withClientRegistrationId("intershop")
-                        .principal("system")
-                        .build()) // Mono<OAuth2AuthorizedClient>
-                .map(OAuth2AuthorizedClient::getAccessToken)
-                .map(OAuth2AccessToken::getTokenValue)
+        return getAccessToken()
                 .publishOn(Schedulers.boundedElastic())
                 .mapNotNull(accessToken -> webClient.post()
                         .uri(endpoint)
@@ -65,5 +55,14 @@ public class PaymentSecuredService {
                         .toBodilessEntity()
                 )
                 .then();
+    }
+
+    private Mono<String> getAccessToken() {
+        return manager.authorize(OAuth2AuthorizeRequest
+                        .withClientRegistrationId("intershop")
+                        .principal("system")
+                        .build()) // Mono<OAuth2AuthorizedClient>
+                .map(OAuth2AuthorizedClient::getAccessToken)
+                .map(OAuth2AccessToken::getTokenValue);
     }
 }
