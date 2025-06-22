@@ -17,7 +17,10 @@ public class RedirectController {
     private final UserService userService;
 
     @GetMapping
-    public Mono<String> redirect(Principal principal) {
+    public Mono<String> authenticationRedirect(Principal principal) {
+        if (principal == null) {
+            return Mono.just("redirect:/public");
+        }
         return userService.getCurrentUserId(principal)
                 .map(id -> {
                     if (id.equals(userService.getAnonymousUserId())) {

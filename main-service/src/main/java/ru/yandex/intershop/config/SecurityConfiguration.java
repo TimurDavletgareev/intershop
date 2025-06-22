@@ -2,7 +2,6 @@ package ru.yandex.intershop.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -14,8 +13,11 @@ import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClient
 import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.web.server.WebSession;
+import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
+import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
 import reactor.core.publisher.Mono;
+
+import java.net.URI;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -35,23 +37,21 @@ public class SecurityConfiguration {
                 /* Вход через OAuth 2.0 провайдеров
                  .oauth2Login()
                 */
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessHandler((exchange, authentication) ->
-                                exchange.getExchange().getSession()
-                                        .flatMap(WebSession::invalidate) // удаляем сессию
-                                        .then(Mono.fromRunnable(() -> {
-                                            exchange.getExchange().getResponse()
-                                                    .setStatusCode(HttpStatus.OK); // отвечаем 200 OK
-                                        }))
-                        )
-                )
                 .exceptionHandling(handling -> handling
                         .accessDeniedHandler((exchange, denied) ->
                                 Mono.error(new AccessDeniedException("Access Denied")))
                 )
+                .logout().logoutSuccessHandler(initServerLogoutSuccessHandler())
+                .and()
                 .build();
     }
+
+    private ServerLogoutSuccessHandler initServerLogoutSuccessHandler() {
+        RedirectServerLogoutSuccessHandler serverLogoutSuccessHandler = new RedirectServerLogoutSuccessHandler();
+        serverLogoutSuccessHandler.setLogoutSuccessUrl(URI.create("/"));
+        return serverLogoutSuccessHandler;
+    }
+
 
     @Bean
     PasswordEncoder passwordEncoder() {
