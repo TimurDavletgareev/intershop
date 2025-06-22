@@ -9,7 +9,7 @@ import ru.yandex.intershop.dto.ItemDto;
 import ru.yandex.intershop.dto.OrderDto;
 import ru.yandex.intershop.entity.Order;
 import ru.yandex.intershop.error.exception.ConflictOnRequestException;
-import ru.yandex.intershop.payment_client.PaymentService;
+import ru.yandex.intershop.payment_client.PaymentSecuredService;
 import ru.yandex.intershop.service.entity.OrderEntityService;
 
 import java.security.Principal;
@@ -24,7 +24,7 @@ public class OrderService {
     private final CartService cartService;
     private final UserService userService;
     private final ItemService itemService;
-    private final PaymentService paymentService;
+    private final PaymentSecuredService paymentService;
 
     public Mono<OrderDto> buy(Principal principal) {
         log.info("Buy order");
