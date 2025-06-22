@@ -33,19 +33,19 @@ public class CartEntityService {
                 .collectList();
     }
 
+    public Mono<Void> save(CartPosition cartPosition) {
+        log.info("Save CartPosition: {}", cartPosition);
+        return cartR2dbcRepository.save(cartPosition)
+                .doOnNext(it -> log.info("Saved CartPosition: {}", it))
+                .then();
+    }
+
     public Mono<Void> deleteById(Long cartPositionId) {
         log.info("Deleting CartPosition by id: {}", cartPositionId);
         return cartR2dbcRepository.deleteById(cartPositionId)
                 .doOnSuccess(it -> log.info("CartPosition deleted by id={}", cartPositionId))
                 .doOnError(throwable ->
                         log.info("CartPosition by id={} NOT deleted: unable to find cartPositionId", cartPositionId))
-                .then();
-    }
-
-    public Mono<Void> save(CartPosition cartPosition) {
-        log.info("Save CartPosition: {}", cartPosition);
-        return cartR2dbcRepository.save(cartPosition)
-                .doOnNext(it -> log.info("Saved CartPosition: {}", it))
                 .then();
     }
 

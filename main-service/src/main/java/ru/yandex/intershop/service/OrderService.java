@@ -45,8 +45,8 @@ public class OrderService {
 
                     paymentService.makePayment(userId, cartDto.total()).block();
                     List<Order> orderList = getOrders(items, orderUid, principal);
-                    orderEntityService.saveAll(orderList).block();
-                    cartService.delete(principal).block();
+                    orderEntityService.saveAll(orderList).subscribe();
+                    cartService.delete(userId).subscribe();
                     log.info("Buy order completed, orderUid = {}", orderUid);
                     sink.next(orderDto);
                 });

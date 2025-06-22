@@ -9,7 +9,7 @@ values ('User 1',
 insert into items(title, description, image_url, amount_in_stock, price)
 values ('Cap 1',
         'simple Cap 1',
-        'https://printing-t-shirts.podaru.ru/assets/images/products/595/1847307tif1000x1000.jpg',
+        'https://cdn1.ozone.ru/s3/multimedia-1-5/6970511345.jpg',
         100,
         1000);
 
@@ -31,7 +31,7 @@ values ('Pants 1',
 insert into items(title, description, image_url, amount_in_stock, price)
 values ('Cap 2',
         'simple Cap 2',
-        'https://printing-t-shirts.podaru.ru/assets/images/products/595/1847307tif1000x1000.jpg',
+        'https://cdn1.ozone.ru/s3/multimedia-1-5/6970511345.jpg',
         100,
         1000);
 
@@ -53,7 +53,7 @@ values ('Pants 2',
 insert into items(title, description, image_url, amount_in_stock, price)
 values ('Cap 3',
         'simple Cap 3',
-        'https://printing-t-shirts.podaru.ru/assets/images/products/595/1847307tif1000x1000.jpg',
+        'https://cdn1.ozone.ru/s3/multimedia-1-5/6970511345.jpg',
         100,
         1000);
 

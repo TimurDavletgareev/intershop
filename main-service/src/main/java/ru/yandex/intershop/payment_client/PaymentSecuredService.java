@@ -23,10 +23,9 @@ public class PaymentSecuredService {
 
     private final ReactiveOAuth2AuthorizedClientManager manager;
 
-    private final WebClient webClient = WebClient.create(paymentUrl);
-
     public Mono<Integer> getBalance(Long userId) {
         log.info("Returning balance for user {}", userId);
+        WebClient webClient = WebClient.create(paymentUrl);
         String endpoint = "/payment/balance/" + userId;
         return getAccessToken()
                 .publishOn(Schedulers.boundedElastic())
@@ -45,6 +44,7 @@ public class PaymentSecuredService {
 
     public Mono<Void> makePayment(Long userId, Integer amount) {
         log.info("Making payment for user {} with amount {}", userId, amount);
+        WebClient webClient = WebClient.create(paymentUrl);
         String endpoint = String.format("/payment/pay/%d/%d", userId, amount);
         return getAccessToken()
                 .publishOn(Schedulers.boundedElastic())

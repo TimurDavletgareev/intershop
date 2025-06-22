@@ -131,6 +131,11 @@ public class CartService {
                 .then();
     }
 
+    public Mono<Void> delete(Long userId) {
+        System.out.println("HJBKJSBDKJHSBDJ DELETE BY USER ID \n" + userId);
+        return cartEntityService.deleteByUserId(userId);
+    }
+
     private static int getNewQuantity(String action, CartPosition cartPosition, Item item) {
         int oldQuantity = cartPosition.getAmount();
         int newQuantity = 0;
@@ -142,13 +147,6 @@ public class CartService {
             newQuantity = oldQuantity - 1;
         }
         return newQuantity;
-    }
-
-    public Mono<Void> delete(Principal principal) {
-        return userService.getCurrentUserId(principal)
-                .publishOn(Schedulers.boundedElastic())
-                .mapNotNull(cartEntityService::deleteByUserId)
-                .then();
     }
 
     private enum AmountAction {
